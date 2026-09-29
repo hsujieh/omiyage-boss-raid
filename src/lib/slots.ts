@@ -3,8 +3,8 @@ import { ARTALE_DAYS } from './week'
 
 export const DAYS = ARTALE_DAYS
 
-/** 18:00–24:00，每小時一格（起始小時） */
-export const HOURS = [18, 19, 20, 21, 22, 23] as const
+/** 14:00–24:00，每小時一格（起始小時） */
+export const HOURS = [14, 15, 16, 17, 18, 19, 20, 21, 22, 23] as const
 
 export function slotKey(day: DayKey, hour: number): SlotKey {
   return `${day}-${hour}` as SlotKey

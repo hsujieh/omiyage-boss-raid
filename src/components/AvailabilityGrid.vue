@@ -58,7 +58,7 @@ function dateFor(dayKey: DayKey): string {
   <section class="grid-wrap">
     <div class="grid-head">
       <h2>此團空檔</h2>
-      <p class="muted">只看這一團的人 · 週二～隔週一 · 18:00–24:00</p>
+      <p class="muted">只看這一團的人 · 週二～隔週一 · 14:00–24:00</p>
     </div>
 
     <div class="scroll">
