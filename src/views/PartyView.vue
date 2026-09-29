@@ -29,6 +29,8 @@ const members = ref<Member[]>([])
 const loading = ref(true)
 const error = ref('')
 const busy = ref(false)
+const editing = ref(false)
+const draft = ref<SlotKey[]>([])
 
 const {
   memberId,
@@ -53,10 +55,35 @@ const isFull = computed(
     !!party.value && party.value.memberIds.length >= party.value.maxSize,
 )
 
-const rosterNames = computed(() => {
-  const map = new Map(members.value.map((m) => [m.id, m.nickname]))
-  return (party.value?.memberIds ?? []).map((id) => map.get(id) ?? '未知')
+/** 有填空檔的人視為有興趣／已報名顯示 */
+const rosterNames = computed(() =>
+  members.value
+    .filter((m) => m.availability.length > 0)
+    .map((m) => m.nickname),
+)
+
+const filledCount = computed(
+  () => members.value.filter((m) => m.availability.length > 0).length,
+)
+
+/** 編輯中用 draft 預覽熱力與自己的格 */
+const gridMembers = computed<Member[]>(() => {
+  if (!editing.value) return members.value
+  const others = members.value.filter((m) => m.id !== memberId.value)
+  return [
+    ...others,
+    {
+      id: memberId.value,
+      nickname: nickname.value || '我',
+      availability: draft.value,
+      updatedAt: Date.now(),
+    },
+  ]
 })
+
+const displayMine = computed(() =>
+  editing.value ? draft.value : myAvailability.value,
+)
 
 let unsub: (() => void) | null = null
 
@@ -70,7 +97,7 @@ async function syncMember() {
       nickname.value,
     )
   } catch {
-    // party may not be ready
+    // ignore
   }
 }
 
@@ -120,73 +147,71 @@ async function onEnter(nick: string) {
   }
 }
 
-async function onToggleSlot(slot: SlotKey) {
-  if (!entered.value) return
-  const set = new Set(myAvailability.value)
+function startEdit() {
+  draft.value = [...myAvailability.value]
+  editing.value = true
+  error.value = ''
+}
+
+function onToggleDraft(slot: SlotKey) {
+  const set = new Set(draft.value)
   if (set.has(slot)) set.delete(slot)
   else set.add(slot)
+  draft.value = [...set] as SlotKey[]
+}
+
+async function saveEdit() {
+  if (!party.value) return
   busy.value = true
+  error.value = ''
   try {
+    await upsertPartyMember(
+      weekId.value,
+      props.partyId,
+      memberId.value,
+      nickname.value,
+    )
     await setPartyAvailability(
       weekId.value,
       props.partyId,
       memberId.value,
-      [...set] as SlotKey[],
+      draft.value,
     )
+
+    if (draft.value.length > 0) {
+      if (!isIn.value) {
+        if (isFull.value) {
+          error.value = '空檔已儲存，但此團已滿無法計入人數'
+        } else {
+          await joinParty(
+            weekId.value,
+            props.partyId,
+            memberId.value,
+            party.value.maxSize,
+            party.value.memberIds.length,
+          )
+        }
+      }
+    } else if (isIn.value) {
+      await leaveParty(weekId.value, props.partyId, memberId.value)
+    }
+
+    editing.value = false
   } catch (e) {
-    error.value = e instanceof Error ? e.message : '更新空檔失敗'
+    error.value = e instanceof Error ? e.message : '儲存失敗'
   } finally {
     busy.value = false
   }
 }
 
 async function onPickSlot(slot: SlotKey) {
-  if (!entered.value) return
+  if (!entered.value || editing.value) return
   busy.value = true
   error.value = ''
   try {
     await setPartySlot(weekId.value, props.partyId, slot)
   } catch (e) {
     error.value = e instanceof Error ? e.message : '設定時段失敗'
-  } finally {
-    busy.value = false
-  }
-}
-
-async function onJoin() {
-  if (!party.value) return
-  busy.value = true
-  error.value = ''
-  try {
-    if (!me.value) {
-      await upsertPartyMember(
-        weekId.value,
-        props.partyId,
-        memberId.value,
-        nickname.value,
-      )
-    }
-    await joinParty(
-      weekId.value,
-      props.partyId,
-      memberId.value,
-      party.value.maxSize,
-      party.value.memberIds.length,
-    )
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : '加入失敗'
-  } finally {
-    busy.value = false
-  }
-}
-
-async function onLeave() {
-  busy.value = true
-  error.value = ''
-  try {
-    await leaveParty(weekId.value, props.partyId, memberId.value)
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : '退出失敗'
   } finally {
     busy.value = false
   }
@@ -214,7 +239,7 @@ function goHome() {
           <span v-if="fromLine" class="line-tag">LINE</span>
         </p>
         <p v-if="party" class="size" :class="{ full: isFull }">
-          {{ party.memberIds.length }}/{{ party.maxSize }}
+          {{ filledCount }}/{{ party.maxSize }}
         </p>
       </div>
     </header>
@@ -232,41 +257,43 @@ function goHome() {
     <p v-if="loading" class="muted">載入中…</p>
 
     <template v-else-if="party">
+      <div v-if="entered" class="edit-bar">
+        <button
+          v-if="!editing"
+          type="button"
+          class="btn btn-ghost"
+          :disabled="busy"
+          @click="startEdit"
+        >
+          編輯
+        </button>
+        <button
+          v-else
+          type="button"
+          class="btn btn-primary"
+          :disabled="busy"
+          @click="saveEdit"
+        >
+          {{ busy ? '儲存中…' : '儲存' }}
+        </button>
+      </div>
+
       <AvailabilityGrid
-        :members="members"
-        :my-availability="myAvailability"
+        :members="gridMembers"
+        :my-availability="displayMine"
         :day-labels="weekInfo.dayLabels"
+        :editing="editing"
         :disabled="!entered || busy"
-        @toggle="onToggleSlot"
+        @toggle="onToggleDraft"
       />
 
-      <TopSlots :members="members" @pick="onPickSlot" />
+      <TopSlots :members="gridMembers" @pick="onPickSlot" />
 
       <section class="roster fade-up">
-        <h2>報名名單</h2>
+        <h2>有填空檔的人</h2>
         <p class="names">
-          {{ rosterNames.length ? rosterNames.join('、') : '尚無人報名' }}
+          {{ rosterNames.length ? rosterNames.join('、') : '尚無人填寫' }}
         </p>
-        <div class="actions">
-          <button
-            v-if="isIn"
-            type="button"
-            class="btn btn-danger"
-            :disabled="busy || !entered"
-            @click="onLeave"
-          >
-            退出此團
-          </button>
-          <button
-            v-else
-            type="button"
-            class="btn btn-primary"
-            :disabled="busy || !entered || isFull"
-            @click="onJoin"
-          >
-            {{ isFull ? '已滿' : '加入此團' }}
-          </button>
-        </div>
       </section>
     </template>
 
@@ -372,6 +399,12 @@ function goHome() {
   color: var(--danger);
 }
 
+.edit-bar {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .roster {
   margin-top: 2rem;
   padding-top: 1.5rem;
@@ -387,12 +420,6 @@ function goHome() {
 .names {
   margin: 0 0 1rem;
   overflow-wrap: anywhere;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
 }
 
 @media (max-width: 560px) {
@@ -412,8 +439,12 @@ function goHome() {
     justify-content: flex-start;
   }
 
-  .actions .btn {
-    flex: 1 1 100%;
+  .edit-bar {
+    justify-content: stretch;
+  }
+
+  .edit-bar .btn {
+    width: 100%;
   }
 }
 </style>

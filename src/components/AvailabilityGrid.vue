@@ -14,6 +14,8 @@ const props = defineProps<{
   members: Member[]
   myAvailability: SlotKey[]
   dayLabels: { key: DayKey; label: string; dateLabel: string }[]
+  /** 編輯模式才可改自己的空檔；否則點格只看有誰 */
+  editing?: boolean
   disabled?: boolean
 }>()
 
@@ -46,7 +48,7 @@ function isMine(slot: SlotKey): boolean {
 function onCellClick(day: DayKey, hour: number) {
   const slot = slotKey(day, hour)
   selected.value = slot
-  if (!props.disabled) emit('toggle', slot)
+  if (props.editing && !props.disabled) emit('toggle', slot)
 }
 
 function dateFor(dayKey: DayKey): string {
@@ -58,7 +60,10 @@ function dateFor(dayKey: DayKey): string {
   <section class="grid-wrap">
     <div class="grid-head">
       <h2>此團空檔</h2>
-      <p class="muted">只看這一團的人 · 週二～隔週一 · 14:00–24:00</p>
+      <p class="muted">
+        <template v-if="editing">編輯中：點格子標記／取消，完成後按「儲存」</template>
+        <template v-else>點格子查看誰有空 · 要修改請按「編輯」</template>
+      </p>
     </div>
 
     <div class="scroll">
@@ -78,7 +83,11 @@ function dateFor(dayKey: DayKey): string {
             class="cell"
             :class="[
               heatClass(slotKey(d.key, hour)),
-              { mine: isMine(slotKey(d.key, hour)), selected: selected === slotKey(d.key, hour) },
+              {
+                mine: isMine(slotKey(d.key, hour)),
+                selected: selected === slotKey(d.key, hour),
+                editing: editing,
+              },
             ]"
             :disabled="disabled"
             :aria-pressed="isMine(slotKey(d.key, hour))"
@@ -191,6 +200,10 @@ function dateFor(dayKey: DayKey): string {
     background 0.15s ease,
     border-color 0.15s ease,
     transform 0.15s ease;
+}
+
+.cell.editing:not(:disabled) {
+  cursor: pointer;
 }
 
 @media (max-width: 560px) {

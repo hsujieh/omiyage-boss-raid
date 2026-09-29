@@ -26,8 +26,6 @@ function openParty(partyId: string) {
 
 <template>
   <section class="parties">
-    <h2>本週團列表</h2>
-    <p class="muted tip">點進團裡再填該團的空檔與報名</p>
     <p v-if="!parties.length" class="muted empty">還沒有團，下面新增一個吧。</p>
     <ul v-else class="list">
       <li v-for="p in parties" :key="p.id" class="party fade-up">
@@ -39,7 +37,7 @@ function openParty(partyId: string) {
             </span>
           </div>
           <p class="meta">時段：{{ p.slot ? formatSlot(p.slot) : '尚未決定' }}</p>
-          <span class="enter">進入此團 →</span>
+          <span class="enter">進入 →</span>
         </button>
         <div class="actions">
           <button
@@ -61,13 +59,6 @@ function openParty(partyId: string) {
   margin-top: 1.5rem;
 }
 
-.parties h2 {
-  font-family: var(--font-display);
-  margin: 0 0 0.35rem;
-  font-size: 1.2rem;
-}
-
-.tip,
 .empty {
   margin: 0 0 0.75rem;
   font-size: 0.88rem;
