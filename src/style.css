@@ -1,0 +1,223 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap');
+
+:root {
+  --bg-deep: #0c1018;
+  --bg-mid: #141b28;
+  --bg-panel: #1a2333;
+  --ink: #e8eef7;
+  --ink-muted: #8b9bb4;
+  --accent: #e0a84a;
+  --accent-soft: #f0c878;
+  --accent-glow: rgba(224, 168, 74, 0.35);
+  --line: rgba(232, 238, 247, 0.12);
+  --danger: #e07070;
+  --ok: #6fcf97;
+  --heat-1: rgba(224, 168, 74, 0.12);
+  --heat-2: rgba(224, 168, 74, 0.28);
+  --heat-3: rgba(224, 168, 74, 0.48);
+  --heat-4: rgba(224, 168, 74, 0.72);
+  --mine: #4a9fd4;
+  --font-display: 'Zen Maru Gothic', 'Noto Sans TC', sans-serif;
+  --font-body: 'Noto Sans TC', sans-serif;
+  --radius: 10px;
+  --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(224, 168, 74, 0.14), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 80%, rgba(74, 159, 212, 0.08), transparent 50%),
+    linear-gradient(180deg, var(--bg-deep) 0%, #0a0e14 100%);
+  background-attachment: fixed;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: var(--accent-soft);
+}
+
+.page {
+  width: min(1100px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: var(--accent-soft);
+  margin: 0;
+}
+
+.muted {
+  color: var(--ink-muted);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.65rem 1.35rem;
+  font-weight: 700;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), #c4862e);
+  color: #1a1208;
+  box-shadow: 0 8px 24px var(--accent-glow);
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 10px 28px rgba(224, 168, 74, 0.5);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+.btn-danger {
+  background: transparent;
+  border-color: rgba(224, 112, 112, 0.4);
+  color: var(--danger);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field label {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.field input,
+.field select {
+  background: var(--bg-deep);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  padding: 0.65rem 0.85rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: var(--accent);
+}
+
+.banner {
+  border: 1px solid rgba(224, 168, 74, 0.35);
+  background: rgba(224, 168, 74, 0.08);
+  color: var(--accent-soft);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+.banner.warn {
+  border-color: rgba(224, 112, 112, 0.35);
+  background: rgba(224, 112, 112, 0.08);
+  color: #f0a0a0;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+.fade-up {
+  animation: fade-up 0.45s ease both;
+}
+
+@media (max-width: 720px) {
+  .page {
+    width: calc(100% - 1.25rem);
+    padding-top: 1.25rem;
+  }
+}
