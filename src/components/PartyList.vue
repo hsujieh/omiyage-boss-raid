@@ -97,6 +97,7 @@ function openParty(partyId: string) {
 
 .party-main {
   flex: 1;
+  min-width: 0;
   text-align: left;
   background: transparent;
   border: none;
@@ -121,12 +122,14 @@ function openParty(partyId: string) {
   margin: 0;
   font-size: 1.05rem;
   font-family: var(--font-display);
+  overflow-wrap: anywhere;
 }
 
 .size {
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   color: var(--accent-soft);
+  flex-shrink: 0;
 }
 
 .size.full {
@@ -159,6 +162,12 @@ function openParty(partyId: string) {
   .party {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.35rem;
+    padding: 0.5rem 0 0.85rem;
+  }
+
+  .actions .btn {
+    width: 100%;
   }
 }
 </style>

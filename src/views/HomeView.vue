@@ -149,19 +149,26 @@ async function onRemove(partyId: string) {
 .header {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem 1rem;
   align-items: flex-start;
   flex-wrap: wrap;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--line);
 }
 
+.header > div:first-child {
+  min-width: 0;
+  flex: 1 1 12rem;
+}
+
 .week-title {
   font-family: var(--font-display);
-  font-size: clamp(1.35rem, 4vw, 1.85rem);
+  font-size: clamp(1.15rem, 4.5vw, 1.85rem);
   font-weight: 700;
   margin: 0;
   color: var(--ink);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .note {
@@ -174,6 +181,8 @@ async function onRemove(partyId: string) {
   flex-direction: column;
   align-items: flex-end;
   gap: 0.5rem;
+  flex: 0 1 auto;
+  max-width: 100%;
 }
 
 .you {
@@ -182,11 +191,15 @@ async function onRemove(partyId: string) {
   color: var(--ink-muted);
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.4rem;
+  max-width: 100%;
 }
 
 .you strong {
   color: var(--accent-soft);
+  overflow-wrap: anywhere;
 }
 
 .line-tag {
@@ -197,5 +210,21 @@ async function onRemove(partyId: string) {
   border: 1px solid rgba(6, 199, 85, 0.45);
   border-radius: 999px;
   padding: 0.1rem 0.4rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    align-items: flex-start;
+  }
+
+  .you {
+    justify-content: flex-start;
+  }
 }
 </style>

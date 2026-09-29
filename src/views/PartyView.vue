@@ -285,20 +285,26 @@ function goHome() {
 .header {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem 1rem;
   align-items: flex-start;
   flex-wrap: wrap;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--line);
 }
 
+.header > div:first-child {
+  min-width: 0;
+  flex: 1 1 12rem;
+}
+
 .back {
   background: none;
   border: none;
   color: var(--ink-muted);
-  padding: 0;
+  padding: 0.25rem 0;
   margin-bottom: 0.35rem;
   font-size: 0.85rem;
+  min-height: 36px;
 }
 
 .back:hover {
@@ -306,8 +312,10 @@ function goHome() {
 }
 
 .room-title {
-  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-size: clamp(1.45rem, 6vw, 2.6rem);
   margin: 0;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .week,
@@ -315,6 +323,7 @@ function goHome() {
   margin: 0.3rem 0 0;
   font-size: 0.9rem;
   color: var(--ink-muted);
+  overflow-wrap: anywhere;
 }
 
 .header-actions {
@@ -322,6 +331,7 @@ function goHome() {
   flex-direction: column;
   align-items: flex-end;
   gap: 0.35rem;
+  max-width: 100%;
 }
 
 .you {
@@ -330,11 +340,14 @@ function goHome() {
   color: var(--ink-muted);
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.4rem;
 }
 
 .you strong {
   color: var(--accent-soft);
+  overflow-wrap: anywhere;
 }
 
 .line-tag {
@@ -345,6 +358,7 @@ function goHome() {
   border: 1px solid rgba(6, 199, 85, 0.45);
   border-radius: 999px;
   padding: 0.1rem 0.4rem;
+  flex-shrink: 0;
 }
 
 .size {
@@ -372,10 +386,34 @@ function goHome() {
 
 .names {
   margin: 0 0 1rem;
+  overflow-wrap: anywhere;
 }
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+@media (max-width: 560px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    align-items: flex-start;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .you {
+    justify-content: flex-start;
+  }
+
+  .actions .btn {
+    flex: 1 1 100%;
+  }
 }
 </style>

@@ -160,4 +160,23 @@ function onBackdrop(e: MouseEvent) {
   justify-content: flex-end;
   margin-top: 0.35rem;
 }
+
+@media (max-width: 480px) {
+  .modal {
+    padding: 1.15rem;
+    border-radius: 14px;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .actions .btn {
+    width: 100%;
+  }
+
+  .create .btn-primary {
+    width: 100%;
+  }
+}
 </style>

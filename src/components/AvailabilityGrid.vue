@@ -118,18 +118,21 @@ function dateFor(dayKey: DayKey): string {
 .scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 0.25rem;
+  padding-bottom: 0.5rem;
+  margin: 0 -0.15rem;
+  padding-left: 0.15rem;
+  padding-right: 0.15rem;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: 64px repeat(7, minmax(52px, 1fr));
+  grid-template-columns: 52px repeat(7, minmax(40px, 1fr));
   gap: 4px;
-  min-width: 520px;
+  min-width: 420px;
 }
 
 .corner {
-  min-height: 2.5rem;
+  min-height: 2.25rem;
 }
 
 .day-h {
@@ -138,7 +141,7 @@ function dateFor(dayKey: DayKey): string {
   align-items: center;
   justify-content: end;
   padding-bottom: 0.25rem;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .day-label {
@@ -147,30 +150,61 @@ function dateFor(dayKey: DayKey): string {
 
 .day-date {
   color: var(--ink-muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
 }
 
 .hour-label {
   display: flex;
   align-items: center;
   justify-content: end;
-  padding-right: 0.5rem;
-  font-size: 0.78rem;
+  padding-right: 0.35rem;
+  font-size: 0.72rem;
   color: var(--ink-muted);
 }
 
 .cell {
   aspect-ratio: 1;
-  min-height: 44px;
+  min-height: 40px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.03);
   color: var(--ink);
   padding: 0;
+  touch-action: manipulation;
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
     transform 0.15s ease;
+}
+
+@media (max-width: 560px) {
+  .grid-head h2 {
+    font-size: 1.15rem;
+  }
+
+  .grid-head p {
+    font-size: 0.82rem;
+  }
+
+  .grid {
+    grid-template-columns: 44px repeat(7, minmax(36px, 1fr));
+    gap: 3px;
+    min-width: 360px;
+  }
+
+  .cell {
+    min-height: 36px;
+    border-radius: 6px;
+  }
+
+  .count {
+    font-size: 0.75rem;
+  }
+
+  .who {
+    font-size: 0.85rem;
+    padding: 0.65rem 0.75rem;
+  }
 }
 
 .cell:hover:not(:disabled) {
