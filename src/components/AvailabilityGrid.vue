@@ -132,16 +132,27 @@ function dateFor(dayKey: DayKey): string {
 }
 
 .corner {
-  min-height: 2.25rem;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  min-height: 2.5rem;
+  background: var(--bg-deep);
+  box-shadow: 2px 2px 0 var(--bg-deep);
 }
 
 .day-h {
+  position: sticky;
+  top: 0;
+  z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: end;
-  padding-bottom: 0.25rem;
+  padding: 0.35rem 0 0.35rem;
   font-size: 0.8rem;
+  background: var(--bg-deep);
+  box-shadow: 0 1px 0 var(--line);
 }
 
 .day-label {
@@ -154,12 +165,17 @@ function dateFor(dayKey: DayKey): string {
 }
 
 .hour-label {
+  position: sticky;
+  left: 0;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: end;
   padding-right: 0.35rem;
   font-size: 0.72rem;
   color: var(--ink-muted);
+  background: var(--bg-deep);
+  box-shadow: 2px 0 0 var(--bg-deep);
 }
 
 .cell {
