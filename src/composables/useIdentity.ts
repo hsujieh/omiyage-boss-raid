@@ -5,6 +5,7 @@ import {
   saveNickname,
   type Identity,
 } from '../lib/identity'
+import { getLiffUrl, isLiffConfigured } from '../lib/line'
 
 /** 共用身分：優先 LINE 顯示名稱 */
 export function useIdentity() {
@@ -14,6 +15,7 @@ export function useIdentity() {
   const entered = ref(false)
   const identityReady = ref(false)
   const identityError = ref('')
+  const lineError = ref('')
 
   onMounted(async () => {
     try {
@@ -21,8 +23,8 @@ export function useIdentity() {
       memberId.value = id.memberId
       nickname.value = id.nickname
       fromLine.value = id.fromLine
+      if (id.lineError) lineError.value = id.lineError
       if (id.redirecting) {
-        // 正在導向 LINE 登入，不顯示暱稱門檻
         return
       }
       entered.value = id.fromLine || Boolean(id.nickname)
@@ -41,6 +43,10 @@ export function useIdentity() {
     entered.value = true
   }
 
+  function openLineLogin() {
+    window.location.href = getLiffUrl()
+  }
+
   return {
     memberId,
     nickname,
@@ -48,6 +54,9 @@ export function useIdentity() {
     entered,
     identityReady,
     identityError,
+    lineError,
+    isLiffConfigured,
     enterWithNickname,
+    openLineLogin,
   }
 }

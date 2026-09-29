@@ -34,15 +34,13 @@ export function saveMemberId(id: string): void {
 export interface Identity {
   memberId: string
   nickname: string
-  /** 已從 LINE 取得名稱，可略過手動暱稱 */
   fromLine: boolean
-  /** 正在導向 LINE 登入 */
   redirecting: boolean
+  lineError?: string
 }
 
 /**
- * 若有設定 VITE_LIFF_ID，優先用 LINE 顯示名稱；
- * 否則沿用本機暱稱／手動輸入。
+ * 若有設定 VITE_LIFF_ID，優先用 LINE 顯示名稱。
  */
 export async function resolveIdentity(): Promise<Identity> {
   if (isLiffConfigured) {
@@ -66,7 +64,15 @@ export async function resolveIdentity(): Promise<Identity> {
         redirecting: false,
       }
     } catch (e) {
-      console.warn('LINE 登入失敗，改為手動暱稱', e)
+      const msg = e instanceof Error ? e.message : String(e)
+      console.warn('LINE 登入失敗', e)
+      return {
+        memberId: getOrCreateMemberId(),
+        nickname: getSavedNickname() ?? '',
+        fromLine: false,
+        redirecting: false,
+        lineError: msg,
+      }
     }
   }
 

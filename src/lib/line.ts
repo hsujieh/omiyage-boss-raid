@@ -4,6 +4,13 @@ export const isLiffConfigured = Boolean(
   (import.meta.env.VITE_LIFF_ID as string | undefined)?.trim(),
 )
 
+function appBaseUrl(): string {
+  const base = import.meta.env.BASE_URL || '/'
+  const origin = window.location.origin
+  const path = base.endsWith('/') ? base : `${base}/`
+  return `${origin}${path}`
+}
+
 export async function fetchLineProfile(): Promise<{
   userId: string
   displayName: string
@@ -14,7 +21,8 @@ export async function fetchLineProfile(): Promise<{
   await liff.init({ liffId })
 
   if (!liff.isLoggedIn()) {
-    liff.login({ redirectUri: window.location.href.split('#')[0] })
+    // 必須落在 LIFF Endpoint 網域下
+    liff.login({ redirectUri: appBaseUrl() })
     return null
   }
 
@@ -23,4 +31,9 @@ export async function fetchLineProfile(): Promise<{
     userId: profile.userId,
     displayName: profile.displayName,
   }
+}
+
+export function getLiffUrl(): string {
+  const liffId = (import.meta.env.VITE_LIFF_ID as string | undefined)?.trim()
+  return liffId ? `https://liff.line.me/${liffId}` : appBaseUrl()
 }

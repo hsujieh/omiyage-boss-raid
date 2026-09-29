@@ -5,7 +5,6 @@ import NicknameGate from '../components/NicknameGate.vue'
 import AvailabilityGrid from '../components/AvailabilityGrid.vue'
 import TopSlots from '../components/TopSlots.vue'
 import { useIdentity } from '../composables/useIdentity'
-import { isLiffConfigured } from '../lib/identity'
 import { getWeekInfo } from '../lib/week'
 import { formatSlot } from '../lib/slots'
 import type { Member, Party, SlotKey } from '../types'
@@ -38,7 +37,10 @@ const {
   entered,
   identityReady,
   identityError,
+  lineError,
+  isLiffConfigured,
   enterWithNickname,
+  openLineLogin,
 } = useIdentity()
 
 const me = computed(() => members.value.find((m) => m.id === memberId.value))
@@ -223,6 +225,7 @@ function goHome() {
     <div v-if="isLiffConfigured && !identityReady" class="banner">
       正在透過 LINE 取得名稱…
     </div>
+    <p v-if="lineError" class="banner warn">LINE 登入失敗：{{ lineError }}</p>
     <p v-if="identityError || error" class="banner warn">
       {{ identityError || error }}
     </p>
@@ -270,7 +273,10 @@ function goHome() {
     <NicknameGate
       :visible="identityReady && !entered && !loading && !!party"
       :initial-nickname="nickname"
+      :show-line-login="isLiffConfigured"
+      :line-error="lineError"
       @submit="onEnter"
+      @line-login="openLineLogin"
     />
   </main>
 </template>

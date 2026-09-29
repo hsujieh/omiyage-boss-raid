@@ -5,7 +5,6 @@ import NicknameGate from '../components/NicknameGate.vue'
 import PartyList from '../components/PartyList.vue'
 import CreatePartyForm from '../components/CreatePartyForm.vue'
 import { useIdentity } from '../composables/useIdentity'
-import { isLiffConfigured } from '../lib/identity'
 import { getWeekInfo } from '../lib/week'
 import type { Party } from '../types'
 import {
@@ -31,7 +30,10 @@ const {
   entered,
   identityReady,
   identityError,
+  lineError,
+  isLiffConfigured,
   enterWithNickname,
+  openLineLogin,
 } = useIdentity()
 
 let unsub: (() => void) | null = null
@@ -115,6 +117,7 @@ async function onRemove(partyId: string) {
       正在透過 LINE 取得名稱…
     </div>
 
+    <p v-if="lineError" class="banner warn">LINE 登入失敗：{{ lineError }}</p>
     <p v-if="identityError || error" class="banner warn">
       {{ identityError || error }}
     </p>
@@ -134,7 +137,10 @@ async function onRemove(partyId: string) {
     <NicknameGate
       :visible="identityReady && !entered && !loading"
       :initial-nickname="nickname"
+      :show-line-login="isLiffConfigured"
+      :line-error="lineError"
       @submit="enterWithNickname"
+      @line-login="openLineLogin"
     />
   </main>
 </template>

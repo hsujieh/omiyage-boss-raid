@@ -4,10 +4,13 @@ import { computed, ref } from 'vue'
 const props = defineProps<{
   visible: boolean
   initialNickname?: string
+  showLineLogin?: boolean
+  lineError?: string
 }>()
 
 const emit = defineEmits<{
   submit: [nickname: string]
+  lineLogin: []
 }>()
 
 const nickname = ref(props.initialNickname ?? '')
@@ -33,8 +36,22 @@ function onSubmit() {
 <template>
   <div v-if="visible" class="gate">
     <div class="gate-panel fade-up">
-      <h2 class="brand">輸入暱稱</h2>
-      <p class="muted">本機會記住你。</p>
+      <h2 class="brand">進入</h2>
+      <p class="muted">建議用 LINE 登入帶入名稱；也可手動輸入。</p>
+
+      <button
+        v-if="showLineLogin"
+        type="button"
+        class="btn btn-line"
+        @click="emit('lineLogin')"
+      >
+        使用 LINE 登入
+      </button>
+
+      <p v-if="lineError" class="err line-err">LINE：{{ lineError }}</p>
+
+      <div v-if="showLineLogin" class="divider"><span>或</span></div>
+
       <form @submit.prevent="onSubmit">
         <div class="field">
           <label for="nick">暱稱</label>
@@ -45,11 +62,10 @@ function onSubmit() {
             maxlength="20"
             placeholder="例如：小明"
             autocomplete="nickname"
-            autofocus
           />
         </div>
         <button class="btn btn-primary" type="submit" :disabled="!canSubmit">
-          開始填空檔
+          用暱稱進入
         </button>
         <p v-if="error" class="err">{{ error }}</p>
       </form>
@@ -83,8 +99,8 @@ function onSubmit() {
   font-size: 1.75rem;
 }
 
-.gate-panel p {
-  margin: 0 0 1.25rem;
+.gate-panel > p {
+  margin: 0 0 1.1rem;
 }
 
 .gate-panel form {
@@ -96,9 +112,44 @@ function onSubmit() {
   width: 100%;
 }
 
+.btn-line {
+  background: #06c755;
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.btn-line:hover {
+  filter: brightness(1.05);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
 .err {
   margin: 0;
   color: var(--danger);
   font-size: 0.9rem;
+}
+
+.line-err {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  word-break: break-all;
 }
 </style>
