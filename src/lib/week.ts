@@ -103,6 +103,32 @@ export function weekRangeText(weekId = currentWeekId()): string {
 
 /** 預設團名，例如「9/30到10/6-一團」 */
 export function defaultPartyName(weekId = currentWeekId()): string {
+  return withDatePartyName('一團', weekId)
+}
+
+/** 日期前綴，例如「9/30到10/6」 */
+export function partyDatePrefix(weekId = currentWeekId()): string {
   const { startLabel, endLabel } = getWeekInfo(weekId)
-  return `${startLabel}到${endLabel}-一團`
+  return `${startLabel}到${endLabel}`
+}
+
+/** 組成「日期-後綴」團名；若已含前綴則不重複加 */
+export function withDatePartyName(
+  suffix: string,
+  weekId = currentWeekId(),
+): string {
+  const prefix = partyDatePrefix(weekId)
+  const cleaned = suffix.trim()
+  if (!cleaned) return `${prefix}-團`
+  if (cleaned.startsWith(prefix)) return cleaned
+  return `${prefix}-${cleaned}`
+}
+
+const ORDINAL = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十']
+
+/** 依目前團數建議後綴，例如第 2 團 →「二團」 */
+export function suggestedPartySuffix(existingCount: number): string {
+  const n = existingCount + 1
+  const label = ORDINAL[n - 1]
+  return label ? `${label}團` : `${n}團`
 }

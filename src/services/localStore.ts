@@ -158,7 +158,7 @@ export function createParty(weekId: string, input: CreatePartyInput): string {
     name: input.name.trim() || '未命名團',
     maxSize: Math.max(1, Math.floor(input.maxSize)),
     slot: input.slot ?? null,
-    memberIds: [input.createdBy],
+    memberIds: [],
     createdBy: input.createdBy,
     createdAt: Date.now(),
     members: {},

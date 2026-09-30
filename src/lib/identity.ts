@@ -1,4 +1,4 @@
-import { fetchLineProfile, isLiffConfigured } from './line'
+import { fetchLineProfile, isLiffConfigured, isLiffUsable } from './line'
 
 const MEMBER_KEY = 'artale-member-id'
 const NICK_KEY = 'artale-nickname'
@@ -40,10 +40,11 @@ export interface Identity {
 }
 
 /**
- * 若有設定 VITE_LIFF_ID，優先用 LINE 顯示名稱。
+ * 若有設定 VITE_LIFF_ID 且非本機，優先用 LINE 顯示名稱。
+ * localhost 會 400（redirectUri 不符 Endpoint），改走暱稱。
  */
 export async function resolveIdentity(): Promise<Identity> {
-  if (isLiffConfigured) {
+  if (isLiffUsable) {
     try {
       const profile = await fetchLineProfile()
       if (!profile) {
@@ -84,4 +85,4 @@ export async function resolveIdentity(): Promise<Identity> {
   }
 }
 
-export { isLiffConfigured }
+export { isLiffConfigured, isLiffUsable }

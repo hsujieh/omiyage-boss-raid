@@ -112,7 +112,13 @@ async function onCreate(payload: { name: string; maxSize: number }) {
     <template v-else>
       <PartyList :parties="parties" />
 
-      <CreatePartyForm v-if="entered" :busy="busy" @create="onCreate" />
+      <CreatePartyForm
+        v-if="entered"
+        :busy="busy"
+        :party-count="parties.length"
+        :week-id="weekId"
+        @create="onCreate"
+      />
     </template>
 
     <NicknameGate

@@ -6,8 +6,8 @@ import AvailabilityGrid from '../components/AvailabilityGrid.vue'
 import TopSlots from '../components/TopSlots.vue'
 import { useIdentity } from '../composables/useIdentity'
 import { getWeekInfo } from '../lib/week'
-import { formatPartyTime } from '../lib/slots'
-import type { Member, Party, PartyTime, SlotKey } from '../types'
+import { cycleHourAvailability } from '../lib/slots'
+import type { DayKey, Member, Party, SlotKey } from '../types'
 import {
   deleteParty,
   ensureCurrentWeek,
@@ -15,7 +15,6 @@ import {
   joinParty,
   leaveParty,
   setPartyAvailability,
-  setPartySlot,
   subscribeParty,
   upsertPartyMember,
 } from '../services/week'
@@ -154,11 +153,8 @@ function startEdit() {
   error.value = ''
 }
 
-function onToggleDraft(slot: SlotKey) {
-  const set = new Set(draft.value)
-  if (set.has(slot)) set.delete(slot)
-  else set.add(slot)
-  draft.value = [...set] as SlotKey[]
+function onCycleDraft(day: DayKey, hour: number) {
+  draft.value = cycleHourAvailability(draft.value, day, hour)
 }
 
 async function saveEdit() {
@@ -205,19 +201,6 @@ async function saveEdit() {
   }
 }
 
-async function onPickSlot(time: PartyTime) {
-  if (!entered.value || editing.value) return
-  busy.value = true
-  error.value = ''
-  try {
-    await setPartySlot(weekId.value, props.partyId, time)
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : '設定時段失敗'
-  } finally {
-    busy.value = false
-  }
-}
-
 async function onDelete() {
   if (!confirm('確定刪除此團？')) return
   busy.value = true
@@ -242,10 +225,6 @@ function goHome() {
       <div>
         <button type="button" class="back" @click="goHome">← 本週列表</button>
         <h1 class="brand room-title">{{ party?.name ?? '團' }}</h1>
-        <p class="muted week">本週 {{ weekInfo.rangeText }}</p>
-        <p class="meta">
-          時段：{{ party?.slot ? formatPartyTime(party.slot) : '尚未決定（點下方重疊時段選定）' }}
-        </p>
       </div>
       <div class="header-actions">
         <p v-if="entered" class="you">
@@ -298,10 +277,10 @@ function goHome() {
         :day-labels="weekInfo.dayLabels"
         :editing="editing"
         :disabled="!entered || busy"
-        @toggle="onToggleDraft"
+        @cycle="onCycleDraft"
       />
 
-      <TopSlots :members="gridMembers" @pick="onPickSlot" />
+      <TopSlots :members="gridMembers" />
 
       <section class="roster fade-up">
         <h2>有填空檔的人</h2>
@@ -367,14 +346,6 @@ function goHome() {
   font-size: clamp(1.45rem, 6vw, 2.6rem);
   margin: 0;
   line-height: 1.2;
-  overflow-wrap: anywhere;
-}
-
-.week,
-.meta {
-  margin: 0.3rem 0 0;
-  font-size: 0.9rem;
-  color: var(--ink-muted);
   overflow-wrap: anywhere;
 }
 

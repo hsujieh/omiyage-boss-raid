@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import { nextTick, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
+import {
+  partyDatePrefix,
+  suggestedPartySuffix,
+  withDatePartyName,
+} from '../lib/week'
 
 const props = defineProps<{
   busy?: boolean
+  partyCount?: number
+  weekId?: string
 }>()
 
 const emit = defineEmits<{
@@ -18,16 +25,19 @@ const open = ref(false)
 const nameInput = ref<HTMLInputElement | null>(null)
 
 const form = reactive({
-  name: '',
+  suffix: '',
   maxSize: 6,
 })
 
+const prefix = computed(() => partyDatePrefix(props.weekId))
+
 watch(open, async (v) => {
   if (v) {
-    form.name = ''
+    form.suffix = suggestedPartySuffix(props.partyCount ?? 0)
     form.maxSize = 6
     await nextTick()
     nameInput.value?.focus()
+    nameInput.value?.select()
   }
 })
 
@@ -38,7 +48,7 @@ function close() {
 
 function onSubmit() {
   emit('create', {
-    name: form.name,
+    name: withDatePartyName(form.suffix, props.weekId),
     maxSize: Number(form.maxSize) || 1,
   })
 }
@@ -73,19 +83,22 @@ function onBackdrop(e: MouseEvent) {
         @keydown.esc="close"
       >
         <h2 id="create-party-title" class="brand">新增團</h2>
-        <p class="muted tip">開團後進到團內再填空檔與選定時間</p>
+        <p class="muted tip">開團後進到團內再填空檔</p>
         <form class="form" @submit.prevent="onSubmit">
           <div class="field">
             <label for="party-name">團名</label>
-            <input
-              id="party-name"
-              ref="nameInput"
-              v-model="form.name"
-              type="text"
-              maxlength="30"
-              placeholder="例如：一王團"
-              required
-            />
+            <div class="name-row">
+              <span class="prefix">{{ prefix }}-</span>
+              <input
+                id="party-name"
+                ref="nameInput"
+                v-model="form.suffix"
+                type="text"
+                maxlength="20"
+                placeholder="二團"
+                required
+              />
+            </div>
           </div>
           <div class="field">
             <label for="max-size">人數上限</label>
@@ -154,6 +167,25 @@ function onBackdrop(e: MouseEvent) {
   gap: 0.85rem;
 }
 
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.prefix {
+  flex-shrink: 0;
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.name-row input {
+  flex: 1;
+  min-width: 0;
+}
+
 .actions {
   display: flex;
   gap: 0.5rem;
@@ -177,6 +209,10 @@ function onBackdrop(e: MouseEvent) {
 
   .create .btn-primary {
     width: 100%;
+  }
+
+  .name-row {
+    flex-wrap: wrap;
   }
 }
 </style>

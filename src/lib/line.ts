@@ -4,6 +4,16 @@ export const isLiffConfigured = Boolean(
   (import.meta.env.VITE_LIFF_ID as string | undefined)?.trim(),
 )
 
+/** localhost / 127.0.0.1 無法當 LIFF Endpoint（需 HTTPS 且 redirectUri 須符合設定） */
+export function isLocalDevHost(): boolean {
+  if (typeof window === 'undefined') return false
+  const host = window.location.hostname
+  return host === 'localhost' || host === '127.0.0.1'
+}
+
+/** 本機開發時不啟用 LIFF，改用暱稱 */
+export const isLiffUsable = isLiffConfigured && !isLocalDevHost()
+
 function appBaseUrl(): string {
   const base = import.meta.env.BASE_URL || '/'
   const origin = window.location.origin
@@ -16,12 +26,12 @@ export async function fetchLineProfile(): Promise<{
   displayName: string
 } | null> {
   const liffId = (import.meta.env.VITE_LIFF_ID as string | undefined)?.trim()
-  if (!liffId) return null
+  if (!liffId || isLocalDevHost()) return null
 
   await liff.init({ liffId })
 
   if (!liff.isLoggedIn()) {
-    // 必須落在 LIFF Endpoint 網域下
+    // redirectUri 必須以 LIFF Console 的 Endpoint URL 為前綴
     liff.login({ redirectUri: appBaseUrl() })
     return null
   }

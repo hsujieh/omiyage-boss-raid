@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import type { Party } from '../types'
-import { formatPartyTime } from '../lib/slots'
 
 defineProps<{
   parties: Party[]
@@ -30,7 +29,6 @@ function openParty(partyId: string) {
               {{ p.memberIds.length }}/{{ p.maxSize }}
             </span>
           </div>
-          <p class="meta">時段：{{ p.slot ? formatPartyTime(p.slot) : '尚未決定' }}</p>
           <span class="enter">進入 →</span>
         </button>
       </li>
@@ -104,12 +102,6 @@ function openParty(partyId: string) {
 
 .size.full {
   color: var(--danger);
-}
-
-.meta {
-  margin: 0.25rem 0 0;
-  font-size: 0.88rem;
-  color: var(--ink-muted);
 }
 
 .enter {

@@ -5,7 +5,7 @@ import {
   saveNickname,
   type Identity,
 } from '../lib/identity'
-import { getLiffUrl, isLiffConfigured } from '../lib/line'
+import { getLiffUrl, isLiffUsable } from '../lib/line'
 
 /** 共用身分：優先 LINE 顯示名稱 */
 export function useIdentity() {
@@ -55,7 +55,7 @@ export function useIdentity() {
     identityReady,
     identityError,
     lineError,
-    isLiffConfigured,
+    isLiffConfigured: isLiffUsable,
     enterWithNickname,
     openLineLogin,
   }
