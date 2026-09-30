@@ -24,7 +24,7 @@ const tops = computed(() => topSlots(props.members, 5))
 
 <style scoped>
 .tops {
-  margin-top: 1.75rem;
+  margin-top: 0;
 }
 
 .tops h2 {

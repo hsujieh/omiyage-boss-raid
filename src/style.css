@@ -31,7 +31,7 @@
 }
 
 html {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 html,
@@ -50,7 +50,7 @@ body {
   background-attachment: fixed;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 #app {

@@ -6,7 +6,13 @@ import AvailabilityGrid from '../components/AvailabilityGrid.vue'
 import TopSlots from '../components/TopSlots.vue'
 import { useIdentity } from '../composables/useIdentity'
 import { getWeekInfo } from '../lib/week'
-import { cycleHourAvailability } from '../lib/slots'
+import {
+  DAYS,
+  cycleHourAvailability,
+  formatSlot,
+  nicknamesForHourCell,
+  slotKey,
+} from '../lib/slots'
 import type { DayKey, Member, Party, SlotKey } from '../types'
 import {
   deleteParty,
@@ -84,6 +90,22 @@ const gridMembers = computed<Member[]>(() => {
 const displayMine = computed(() =>
   editing.value ? draft.value : myAvailability.value,
 )
+
+const selectedCell = ref<{ day: DayKey; hour: number } | null>(null)
+
+const selectedGroups = computed(() =>
+  selectedCell.value
+    ? nicknamesForHourCell(
+        gridMembers.value,
+        selectedCell.value.day,
+        selectedCell.value.hour,
+      )
+    : [],
+)
+
+function onSelectCell(cell: { day: DayKey; hour: number } | null) {
+  selectedCell.value = cell
+}
 
 let unsub: (() => void) | null = null
 
@@ -271,23 +293,52 @@ function goHome() {
         </button>
       </div>
 
-      <AvailabilityGrid
-        :members="gridMembers"
-        :my-availability="displayMine"
-        :day-labels="weekInfo.dayLabels"
-        :editing="editing"
-        :disabled="!entered || busy"
-        @cycle="onCycleDraft"
-      />
+      <div class="party-body">
+        <div class="grid-col">
+          <AvailabilityGrid
+            :members="gridMembers"
+            :my-availability="displayMine"
+            :day-labels="weekInfo.dayLabels"
+            :editing="editing"
+            :disabled="!entered || busy"
+            @cycle="onCycleDraft"
+            @select="onSelectCell"
+          />
+        </div>
 
-      <TopSlots :members="gridMembers" />
+        <aside class="side-col">
+          <div v-if="selectedCell" class="who fade-up">
+            <strong
+              >週{{ DAYS.find((d) => d.key === selectedCell!.day)?.label }}
+              {{ selectedCell!.hour }} 點</strong
+            >
+            <template v-if="selectedGroups.length">
+              <span
+                v-for="g in selectedGroups"
+                :key="g.minute"
+                class="who-line"
+              >
+                {{
+                  formatSlot(
+                    slotKey(selectedCell!.day, selectedCell!.hour, g.minute),
+                  )
+                }}：{{ g.names.join('、') }}
+              </span>
+            </template>
+            <span v-else class="muted">尚無人標記此時段</span>
+          </div>
+          <p v-else class="who-placeholder muted">點左側格子查看誰有空</p>
 
-      <section class="roster fade-up">
-        <h2>有填空檔的人</h2>
-        <p class="names">
-          {{ rosterNames.length ? rosterNames.join('、') : '尚無人填寫' }}
-        </p>
-      </section>
+          <TopSlots :members="gridMembers" />
+
+          <section class="roster fade-up">
+            <h2>有填空檔的人</h2>
+            <p class="names">
+              {{ rosterNames.length ? rosterNames.join('、') : '尚無人填寫' }}
+            </p>
+          </section>
+        </aside>
+      </div>
 
       <div class="danger-zone fade-up">
         <button
@@ -401,10 +452,53 @@ function goHome() {
   justify-content: flex-end;
 }
 
+.party-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 0.25rem;
+}
+
+.grid-col {
+  min-width: 0;
+}
+
+.side-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.who {
+  padding: 0.85rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-size: 0.95rem;
+}
+
+.who strong {
+  font-size: 1.05rem;
+}
+
+.who-line {
+  overflow-wrap: anywhere;
+}
+
+.who-placeholder {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-left: 3px solid var(--line);
+  font-size: 0.95rem;
+}
+
 .roster {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--line);
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 .roster h2 {
@@ -414,7 +508,7 @@ function goHome() {
 }
 
 .names {
-  margin: 0 0 1rem;
+  margin: 0;
   overflow-wrap: anywhere;
 }
 
@@ -428,6 +522,32 @@ function goHome() {
 
 .danger-zone .btn {
   width: min(100%, 16rem);
+}
+
+@media (min-width: 900px) {
+  .party-body {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1.75rem;
+  }
+
+  .grid-col {
+    flex: 1 1 58%;
+  }
+
+  .side-col {
+    flex: 0 1 38%;
+    max-width: 22rem;
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+@media (max-width: 899px) {
+  .side-col .who,
+  .side-col .who-placeholder {
+    display: none;
+  }
 }
 
 @media (max-width: 560px) {

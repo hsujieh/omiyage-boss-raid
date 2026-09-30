@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import type { DayKey, Member, SlotKey, SlotMinute } from '../types'
 import {
   DAYS,
@@ -22,7 +22,15 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   cycle: [day: DayKey, hour: number]
+  select: [cell: { day: DayKey; hour: number } | null]
 }>()
+
+const gridRef = ref<HTMLElement | null>(null)
+const tipRef = ref<HTMLElement | null>(null)
+const selected = ref<{ day: DayKey; hour: number } | null>(null)
+const tipPos = ref<{ top: number; left: number; width: number; flip: boolean } | null>(
+  null,
+)
 
 const maxCount = computed(() => {
   let max = 1
@@ -33,8 +41,6 @@ const maxCount = computed(() => {
   }
   return max
 })
-
-const selected = ref<{ day: DayKey; hour: number } | null>(null)
 
 const selectedGroups = computed(() =>
   selected.value
@@ -56,9 +62,64 @@ function mineMinute(day: DayKey, hour: number): SlotMinute | null {
   return myMinuteAt(props.myAvailability, day, hour)
 }
 
-function onCellClick(day: DayKey, hour: number) {
+function clearSelect() {
+  selected.value = null
+  tipPos.value = null
+  emit('select', null)
+}
+
+function placeTip(cell: HTMLElement) {
+  const grid = gridRef.value
+  if (!grid) return
+
+  const tipWidth = Math.min(220, Math.max(160, grid.clientWidth * 0.55))
+  const gap = 6
+  let left = cell.offsetLeft
+  const top = cell.offsetTop + cell.offsetHeight + gap
+  let flip = false
+
+  // 靠右會超出時改往左展
+  if (left + tipWidth > grid.clientWidth - 4) {
+    left = cell.offsetLeft + cell.offsetWidth - tipWidth
+    flip = true
+  }
+  left = Math.max(0, Math.min(left, grid.clientWidth - tipWidth))
+
+  tipPos.value = { top, left, width: tipWidth, flip }
+}
+
+async function onCellClick(day: DayKey, hour: number, e: MouseEvent) {
+  const same =
+    selected.value?.day === day && selected.value?.hour === hour
+
+  // 檢視模式：再點同一格取消外框與 tip
+  if (same && !props.editing) {
+    clearSelect()
+    return
+  }
+
   selected.value = { day, hour }
+  emit('select', { day, hour })
   if (props.editing && !props.disabled) emit('cycle', day, hour)
+
+  const cell = e.currentTarget as HTMLElement
+  await nextTick()
+  placeTip(cell)
+  await nextTick()
+  // 量一次實際寬度再微調，避免長文字撑破
+  const tipEl = tipRef.value
+  const grid = gridRef.value
+  if (tipEl && grid && tipPos.value) {
+    const realW = tipEl.offsetWidth
+    let left = tipPos.value.left
+    let flip = tipPos.value.flip
+    if (left + realW > grid.clientWidth - 4) {
+      left = cell.offsetLeft + cell.offsetWidth - realW
+      flip = true
+    }
+    left = Math.max(0, Math.min(left, grid.clientWidth - realW))
+    tipPos.value = { ...tipPos.value, left, flip, width: realW }
+  }
 }
 
 function dateFor(dayKey: DayKey): string {
@@ -87,7 +148,7 @@ function cellTitle(day: DayKey, hour: number): string {
     </div>
 
     <div class="scroll">
-      <div class="grid" role="grid" aria-label="週空檔表">
+      <div ref="gridRef" class="grid" role="grid" aria-label="週空檔表">
         <div class="corner" />
         <div v-for="d in DAYS" :key="d.key" class="day-h">
           <span class="day-label">{{ d.label }}</span>
@@ -114,33 +175,43 @@ function cellTitle(day: DayKey, hour: number): string {
             :disabled="disabled"
             :aria-pressed="mineMinute(d.key, hour) !== null"
             :title="cellTitle(d.key, hour)"
-            @click="onCellClick(d.key, hour)"
+            @click="onCellClick(d.key, hour, $event)"
           >
             <span class="count">{{
               countByHourCell(members, d.key, hour) || ''
             }}</span>
           </button>
         </template>
-      </div>
-    </div>
 
-    <div v-if="selected" class="who fade-up">
-      <strong
-        >週{{ DAYS.find((d) => d.key === selected!.day)?.label }}
-        {{ selected!.hour }} 點</strong
-      >
-      <template v-if="selectedGroups.length">
-        <span
-          v-for="g in selectedGroups"
-          :key="g.minute"
-          class="names"
+        <div
+          v-if="selected && tipPos"
+          ref="tipRef"
+          class="cell-tip"
+          :class="{ flip: tipPos.flip }"
+          :style="{
+            top: `${tipPos.top}px`,
+            left: `${tipPos.left}px`,
+            width: `${tipPos.width}px`,
+          }"
         >
-          {{
-            formatSlot(slotKey(selected!.day, selected!.hour, g.minute))
-          }}：{{ g.names.join('、') }}
-        </span>
-      </template>
-      <span v-else class="muted">尚無人標記此時段</span>
+          <strong
+            >週{{ DAYS.find((d) => d.key === selected!.day)?.label }}
+            {{ selected!.hour }} 點</strong
+          >
+          <template v-if="selectedGroups.length">
+            <span
+              v-for="g in selectedGroups"
+              :key="g.minute"
+              class="tip-line"
+            >
+              {{
+                formatSlot(slotKey(selected!.day, selected!.hour, g.minute))
+              }}：{{ g.names.join('、') }}
+            </span>
+          </template>
+          <span v-else class="muted">尚無人標記此時段</span>
+        </div>
+      </div>
     </div>
   </section>
 </template>
@@ -171,6 +242,7 @@ function cellTitle(day: DayKey, hour: number): string {
   grid-template-columns: 40px repeat(7, minmax(40px, 1fr));
   gap: 4px;
   min-width: 420px;
+  position: relative;
 }
 
 .corner {
@@ -258,11 +330,6 @@ function cellTitle(day: DayKey, hour: number): string {
   .count {
     font-size: 0.75rem;
   }
-
-  .who {
-    font-size: 0.85rem;
-    padding: 0.65rem 0.75rem;
-  }
 }
 
 .cell:hover:not(:disabled) {
@@ -329,15 +396,58 @@ function cellTitle(day: DayKey, hour: number): string {
   z-index: 1;
 }
 
-.who {
-  margin-top: 0.85rem;
-  padding: 0.75rem 1rem;
-  border-left: 3px solid var(--accent);
-  background: rgba(255, 255, 255, 0.03);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  align-items: baseline;
-  font-size: 0.92rem;
+/* 手機浮層 tip，不佔格子排版 */
+.cell-tip {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .scroll {
+    /* 讓浮層 tip 可超出格子往下長一點 */
+    padding-bottom: 4.5rem;
+  }
+
+  .cell-tip {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    position: absolute;
+    z-index: 20;
+    padding: 0.65rem 0.75rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    font-size: 0.88rem;
+    line-height: 1.4;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+
+  .cell-tip::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 14px;
+    width: 10px;
+    height: 10px;
+    background: var(--bg-panel);
+    border-left: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+    transform: rotate(45deg);
+  }
+
+  .cell-tip.flip::before {
+    left: auto;
+    right: 14px;
+  }
+
+  .cell-tip strong {
+    font-size: 0.92rem;
+  }
+
+  .tip-line {
+    overflow-wrap: anywhere;
+  }
 }
 </style>
