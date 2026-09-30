@@ -1,5 +1,5 @@
 import { isFirebaseConfigured } from '../firebase/config'
-import type { CreatePartyInput, Member, Party, SlotKey } from '../types'
+import type { CreatePartyInput, Member, Party, PartyTime, SlotKey } from '../types'
 import * as local from './localStore'
 
 type Unsubscribe = () => void
@@ -125,7 +125,7 @@ export async function leaveParty(
 export async function setPartySlot(
   weekId: string,
   partyId: string,
-  slot: SlotKey | null,
+  slot: PartyTime | null,
 ): Promise<void> {
   if (!isFirebaseConfigured) {
     return local.setPartySlot(weekId, partyId, slot)

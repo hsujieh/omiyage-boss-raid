@@ -6,9 +6,10 @@ import AvailabilityGrid from '../components/AvailabilityGrid.vue'
 import TopSlots from '../components/TopSlots.vue'
 import { useIdentity } from '../composables/useIdentity'
 import { getWeekInfo } from '../lib/week'
-import { formatSlot } from '../lib/slots'
-import type { Member, Party, SlotKey } from '../types'
+import { formatPartyTime } from '../lib/slots'
+import type { Member, Party, PartyTime, SlotKey } from '../types'
 import {
+  deleteParty,
   ensureCurrentWeek,
   isFirebaseConfigured,
   joinParty,
@@ -204,15 +205,28 @@ async function saveEdit() {
   }
 }
 
-async function onPickSlot(slot: SlotKey) {
+async function onPickSlot(time: PartyTime) {
   if (!entered.value || editing.value) return
   busy.value = true
   error.value = ''
   try {
-    await setPartySlot(weekId.value, props.partyId, slot)
+    await setPartySlot(weekId.value, props.partyId, time)
   } catch (e) {
     error.value = e instanceof Error ? e.message : '設定時段失敗'
   } finally {
+    busy.value = false
+  }
+}
+
+async function onDelete() {
+  if (!confirm('確定刪除此團？')) return
+  busy.value = true
+  error.value = ''
+  try {
+    await deleteParty(weekId.value, props.partyId)
+    router.push({ name: 'home' })
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '刪除失敗'
     busy.value = false
   }
 }
@@ -230,7 +244,7 @@ function goHome() {
         <h1 class="brand room-title">{{ party?.name ?? '團' }}</h1>
         <p class="muted week">本週 {{ weekInfo.rangeText }}</p>
         <p class="meta">
-          時段：{{ party?.slot ? formatSlot(party.slot) : '尚未決定（點下方重疊時段選定）' }}
+          時段：{{ party?.slot ? formatPartyTime(party.slot) : '尚未決定（點下方重疊時段選定）' }}
         </p>
       </div>
       <div class="header-actions">
@@ -295,6 +309,17 @@ function goHome() {
           {{ rosterNames.length ? rosterNames.join('、') : '尚無人填寫' }}
         </p>
       </section>
+
+      <div class="danger-zone fade-up">
+        <button
+          type="button"
+          class="btn btn-danger"
+          :disabled="busy || !entered"
+          @click="onDelete"
+        >
+          刪除此團
+        </button>
+      </div>
     </template>
 
     <NicknameGate
@@ -420,6 +445,18 @@ function goHome() {
 .names {
   margin: 0 0 1rem;
   overflow-wrap: anywhere;
+}
+
+.danger-zone {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: center;
+}
+
+.danger-zone .btn {
+  width: min(100%, 16rem);
 }
 
 @media (max-width: 560px) {

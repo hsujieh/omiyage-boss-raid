@@ -9,7 +9,6 @@ import { getWeekInfo } from '../lib/week'
 import type { Party } from '../types'
 import {
   createParty,
-  deleteParty,
   ensureCurrentWeek,
   isFirebaseConfigured,
   subscribeParties,
@@ -80,19 +79,6 @@ async function onCreate(payload: { name: string; maxSize: number }) {
     busy.value = false
   }
 }
-
-async function onRemove(partyId: string) {
-  if (!confirm('確定刪除此團？')) return
-  busy.value = true
-  error.value = ''
-  try {
-    await deleteParty(weekId.value, partyId)
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : '刪除失敗'
-  } finally {
-    busy.value = false
-  }
-}
 </script>
 
 <template>
@@ -124,12 +110,7 @@ async function onRemove(partyId: string) {
     <p v-if="loading" class="muted">載入本週…</p>
 
     <template v-else>
-      <PartyList
-        :parties="parties"
-        :my-id="memberId"
-        :busy="busy || !entered"
-        @remove="onRemove"
-      />
+      <PartyList :parties="parties" />
 
       <CreatePartyForm v-if="entered" :busy="busy" @create="onCreate" />
     </template>

@@ -1,16 +1,10 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import type { Party } from '../types'
-import { formatSlot } from '../lib/slots'
+import { formatPartyTime } from '../lib/slots'
 
 defineProps<{
   parties: Party[]
-  myId: string
-  busy?: boolean
-}>()
-
-const emit = defineEmits<{
-  remove: [partyId: string]
 }>()
 
 const router = useRouter()
@@ -36,19 +30,9 @@ function openParty(partyId: string) {
               {{ p.memberIds.length }}/{{ p.maxSize }}
             </span>
           </div>
-          <p class="meta">時段：{{ p.slot ? formatSlot(p.slot) : '尚未決定' }}</p>
+          <p class="meta">時段：{{ p.slot ? formatPartyTime(p.slot) : '尚未決定' }}</p>
           <span class="enter">進入 →</span>
         </button>
-        <div class="actions">
-          <button
-            type="button"
-            class="btn btn-ghost danger-text"
-            :disabled="busy"
-            @click="emit('remove', p.id)"
-          >
-            刪除
-          </button>
-        </div>
       </li>
     </ul>
   </section>
@@ -74,10 +58,6 @@ function openParty(partyId: string) {
 }
 
 .party {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: space-between;
-  align-items: center;
   padding: 0.35rem 0;
   border-bottom: 1px solid var(--line);
 }
@@ -87,8 +67,7 @@ function openParty(partyId: string) {
 }
 
 .party-main {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
   text-align: left;
   background: transparent;
   border: none;
@@ -140,25 +119,9 @@ function openParty(partyId: string) {
   color: var(--accent-soft);
 }
 
-.actions {
-  flex-shrink: 0;
-}
-
-.danger-text {
-  color: var(--danger);
-  border-color: rgba(224, 112, 112, 0.35);
-}
-
 @media (max-width: 560px) {
   .party {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.35rem;
     padding: 0.5rem 0 0.85rem;
-  }
-
-  .actions .btn {
-    width: 100%;
   }
 }
 </style>

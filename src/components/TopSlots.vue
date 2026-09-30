@@ -1,29 +1,56 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { Member, SlotKey } from '../types'
-import { formatSlot, topSlots } from '../lib/slots'
+import { computed, ref } from 'vue'
+import type { Member, PartyTime, SlotKey, SlotMinute } from '../types'
+import {
+  formatSlot,
+  partyTimeFromSlot,
+  topSlots,
+} from '../lib/slots'
 
 const props = defineProps<{
   members: Member[]
 }>()
 
 const emit = defineEmits<{
-  pick: [slot: SlotKey]
+  pick: [time: PartyTime]
 }>()
 
 const tops = computed(() => topSlots(props.members, 5))
+const pending = ref<SlotKey | null>(null)
+
+function openPick(slot: SlotKey) {
+  pending.value = pending.value === slot ? null : slot
+}
+
+function confirm(slot: SlotKey, minute: SlotMinute) {
+  emit('pick', partyTimeFromSlot(slot, minute))
+  pending.value = null
+}
 </script>
 
 <template>
   <section v-if="tops.length" class="tops fade-up">
     <h2>重疊最多時段</h2>
-    <p class="hint muted">點一下設為「這一團」的打王時間</p>
+    <p class="hint muted">點一下，再選整點或半點設為打王時間</p>
     <ol>
-      <li v-for="item in tops" :key="item.slot">
-        <button type="button" class="slot-btn" @click="emit('pick', item.slot)">
+      <li v-for="item in tops" :key="item.slot" class="item">
+        <button
+          type="button"
+          class="slot-btn"
+          :class="{ open: pending === item.slot }"
+          @click="openPick(item.slot)"
+        >
           <span class="label">{{ formatSlot(item.slot) }}</span>
           <span class="badge">{{ item.count }} 人</span>
         </button>
+        <div v-if="pending === item.slot" class="minute-pick">
+          <button type="button" class="min-btn" @click="confirm(item.slot, 0)">
+            :00
+          </button>
+          <button type="button" class="min-btn" @click="confirm(item.slot, 30)">
+            :30
+          </button>
+        </div>
       </li>
     </ol>
   </section>
@@ -54,6 +81,13 @@ ol {
   gap: 0.5rem;
 }
 
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .slot-btn {
   display: inline-flex;
   align-items: center;
@@ -68,7 +102,8 @@ ol {
     transform 0.15s ease;
 }
 
-.slot-btn:hover {
+.slot-btn:hover,
+.slot-btn.open {
   border-color: var(--accent);
 }
 
@@ -83,5 +118,24 @@ ol {
   font-size: 0.78rem;
   border-radius: 999px;
   padding: 0.15rem 0.5rem;
+}
+
+.minute-pick {
+  display: inline-flex;
+  gap: 0.3rem;
+}
+
+.min-btn {
+  background: var(--accent);
+  color: #1a1208;
+  border: none;
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.min-btn:active {
+  transform: scale(0.97);
 }
 </style>

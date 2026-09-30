@@ -100,3 +100,9 @@ export function getWeekInfo(weekId = currentWeekId()) {
 export function weekRangeText(weekId = currentWeekId()): string {
   return getWeekInfo(weekId).rangeText
 }
+
+/** 預設團名，例如「9/30到10/6-一團」 */
+export function defaultPartyName(weekId = currentWeekId()): string {
+  const { startLabel, endLabel } = getWeekInfo(weekId)
+  return `${startLabel}到${endLabel}-一團`
+}

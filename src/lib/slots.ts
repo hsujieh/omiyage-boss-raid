@@ -1,4 +1,4 @@
-import type { DayKey, Member, SlotKey } from '../types'
+import type { DayKey, Member, PartyTime, SlotKey, SlotMinute } from '../types'
 import { ARTALE_DAYS } from './week'
 
 export const DAYS = ARTALE_DAYS
@@ -19,6 +19,47 @@ export function formatSlot(slot: SlotKey): string {
   const { day, hour } = parseSlot(slot)
   const label = DAYS.find((d) => d.key === day)?.label ?? day
   return `週${label} ${hour}:00`
+}
+
+export function partyTime(
+  day: DayKey,
+  hour: number,
+  minute: SlotMinute = 0,
+): PartyTime {
+  return `${day}-${hour}:${String(minute).padStart(2, '0')}`
+}
+
+/** 相容舊資料 "tue-21"（視為 :00）與 "tue-21:30" */
+export function parsePartyTime(time: PartyTime): {
+  day: DayKey
+  hour: number
+  minute: SlotMinute
+} {
+  const match = /^([a-z]+)-(\d+)(?::(\d{2}))?$/.exec(time)
+  if (!match) {
+    const { day, hour } = parseSlot(time as SlotKey)
+    return { day, hour, minute: 0 }
+  }
+  const minuteRaw = Number(match[3] ?? '0')
+  return {
+    day: match[1] as DayKey,
+    hour: Number(match[2]),
+    minute: minuteRaw === 30 ? 30 : 0,
+  }
+}
+
+export function formatPartyTime(time: PartyTime): string {
+  const { day, hour, minute } = parsePartyTime(time)
+  const label = DAYS.find((d) => d.key === day)?.label ?? day
+  return `週${label} ${hour}:${String(minute).padStart(2, '0')}`
+}
+
+export function partyTimeFromSlot(
+  slot: SlotKey,
+  minute: SlotMinute = 0,
+): PartyTime {
+  const { day, hour } = parseSlot(slot)
+  return partyTime(day, hour, minute)
 }
 
 export function allSlots(): SlotKey[] {

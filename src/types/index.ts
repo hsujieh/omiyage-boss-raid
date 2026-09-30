@@ -1,7 +1,12 @@
 export type DayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
 
-/** 時段鍵，例如 "tue-21" */
+/** 空檔時段鍵（整點），例如 "tue-21" */
 export type SlotKey = `${DayKey}-${number}`
+
+/** 打王時間（可含半點），例如 "tue-21:00" / "tue-21:30"；舊資料 "tue-21" 視為 :00 */
+export type PartyTime = string
+
+export type SlotMinute = 0 | 30
 
 export interface WeekInfo {
   id: string
@@ -22,7 +27,7 @@ export interface Party {
   id: string
   name: string
   maxSize: number
-  slot: SlotKey | null
+  slot: PartyTime | null
   memberIds: string[]
   createdBy: string
   createdAt: number
@@ -31,6 +36,6 @@ export interface Party {
 export interface CreatePartyInput {
   name: string
   maxSize: number
-  slot?: SlotKey | null
+  slot?: PartyTime | null
   createdBy: string
 }

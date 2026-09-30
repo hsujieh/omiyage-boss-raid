@@ -14,8 +14,8 @@ import {
 } from 'firebase/firestore'
 import { getDb } from '../firebase/config'
 import { GUILD_ID } from '../lib/guild'
-import { currentWeekId } from '../lib/week'
-import type { CreatePartyInput, Member, Party, SlotKey } from '../types'
+import { currentWeekId, defaultPartyName } from '../lib/week'
+import type { CreatePartyInput, Member, Party, PartyTime, SlotKey } from '../types'
 
 function makeId(): string {
   return Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4)
@@ -79,13 +79,20 @@ export async function ensureCurrentWeek(): Promise<string> {
   const parties = await getDocs(await partiesCol(weekId))
   if (parties.empty) {
     await setDoc(await partyRef(weekId, 'default'), {
-      name: '本週打王',
+      name: defaultPartyName(weekId),
       maxSize: 6,
       slot: null,
       memberIds: [],
       createdBy: 'system',
       createdAt: Date.now(),
     })
+  } else {
+    const def = parties.docs.find((d) => d.id === 'default')
+    if (def?.data()?.name === '本週打王') {
+      await updateDoc(await partyRef(weekId, 'default'), {
+        name: defaultPartyName(weekId),
+      })
+    }
   }
 
   return weekId
@@ -254,7 +261,7 @@ export async function leaveParty(
 export async function setPartySlot(
   weekId: string,
   partyId: string,
-  slot: SlotKey | null,
+  slot: PartyTime | null,
 ): Promise<void> {
   await updateDoc(await partyRef(weekId, partyId), { slot })
 }

@@ -1,6 +1,6 @@
 import { GUILD_ID } from '../lib/guild'
-import { currentWeekId } from '../lib/week'
-import type { CreatePartyInput, Member, Party, SlotKey } from '../types'
+import { currentWeekId, defaultPartyName } from '../lib/week'
+import type { CreatePartyInput, Member, Party, PartyTime, SlotKey } from '../types'
 
 const STORAGE_KEY = 'artale-local-db-v4'
 const CHANNEL = 'artale-local-sync'
@@ -71,7 +71,7 @@ export function ensureCurrentWeek(): string {
   if (Object.keys(week.parties).length === 0) {
     week.parties.default = {
       id: 'default',
-      name: '本週打王',
+      name: defaultPartyName(weekId),
       maxSize: 6,
       slot: null,
       memberIds: [],
@@ -79,6 +79,8 @@ export function ensureCurrentWeek(): string {
       createdAt: Date.now(),
       members: {},
     }
+  } else if (week.parties.default?.name === '本週打王') {
+    week.parties.default.name = defaultPartyName(weekId)
   }
   write(db)
   return weekId
@@ -220,7 +222,7 @@ export function leaveParty(weekId: string, partyId: string, memberId: string): v
 export function setPartySlot(
   weekId: string,
   partyId: string,
-  slot: SlotKey | null,
+  slot: PartyTime | null,
 ): void {
   const db = read()
   const party = db.weeks[weekId]?.parties[partyId]
