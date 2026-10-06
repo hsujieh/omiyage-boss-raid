@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import type { DayKey, Member, SlotKey, SlotMinute } from '../types'
 import {
   DAYS,
@@ -68,6 +68,13 @@ function clearSelect() {
   emit('select', null)
 }
 
+watch(
+  () => props.editing,
+  (editing) => {
+    if (editing) clearSelect()
+  },
+)
+
 function placeTip(cell: HTMLElement) {
   const grid = gridRef.value
   if (!grid) return
@@ -89,18 +96,24 @@ function placeTip(cell: HTMLElement) {
 }
 
 async function onCellClick(day: DayKey, hour: number, e: MouseEvent) {
+  // 編輯模式：只切換空檔，不顯示 tip／外框
+  if (props.editing) {
+    clearSelect()
+    if (!props.disabled) emit('cycle', day, hour)
+    return
+  }
+
   const same =
     selected.value?.day === day && selected.value?.hour === hour
 
   // 檢視模式：再點同一格取消外框與 tip
-  if (same && !props.editing) {
+  if (same) {
     clearSelect()
     return
   }
 
   selected.value = { day, hour }
   emit('select', { day, hour })
-  if (props.editing && !props.disabled) emit('cycle', day, hour)
 
   const cell = e.currentTarget as HTMLElement
   await nextTick()
